@@ -30,7 +30,12 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: [
+    "https://vizhaa-backend-1.onrender.com", 
+    "http://localhost:3000", 
+    "http://localhost:3001",
+    "http://127.0.0.1:3000"
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -57,6 +62,10 @@ app.use('/api/organizer', organizerRoutes);
 app.use('/api/supplier', supplierRoutes); 
 
 // Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: "ok" });
+});
+
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
