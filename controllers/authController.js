@@ -237,7 +237,7 @@ class AuthController {
       } else if (userType === 'supplier') {
         userData.aadharNumber = aadharNumber || null;
         userData.services = services ? (Array.isArray(services) ? services : services.split(',')) : [];
-        userData.isApproved = false; // Suppliers need admin approval
+        userData.isApproved = true; // Allow suppliers to login immediately
       }
 
       // Handle file upload if present
@@ -461,13 +461,8 @@ class AuthController {
         });
       }
 
-      // For suppliers, check if they are approved
-      if (user.userType === 'supplier' && !user.isApproved) {
-        return res.status(400).json({
-          success: false,
-          message: 'Your account is pending approval. Please wait for admin approval.'
-        });
-      }
+      // Allow suppliers to login even if pending approval
+      // Frontend will handle approval status display
 
       // Check password
       const isPasswordValid = await userService.validatePassword(user, password);
@@ -881,7 +876,8 @@ class AuthController {
         userType: 'supplier',
         phone,
         services: Array.isArray(services) ? services : [],
-        isVerified: true
+        isVerified: true,
+        isApproved: true
       };
 
       if (req.file) userData.aadharCard = req.file.path;

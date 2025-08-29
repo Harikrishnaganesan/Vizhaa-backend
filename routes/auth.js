@@ -20,6 +20,7 @@ router.post('/login', authController.login);
 
 // Password reset with OTP
 router.post('/forgot-password', authController.forgotPassword);
+router.post('/verify-password-reset-otp', authController.verifyPasswordResetOTP);
 router.post('/reset-password', authController.resetPassword);
 
 export default router;
