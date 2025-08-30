@@ -69,15 +69,98 @@ class OrganizerController {
       const events = await Event.find({ organizerId: req.user._id })
         .sort({ createdAt: -1 });
 
+      // Add supplier count for each event
+      const eventsWithSupplierCount = await Promise.all(
+        events.map(async (event) => {
+          const supplierCount = await Booking.countDocuments({ eventId: event._id });
+          return {
+            ...event.toObject(),
+            suppliersCount: supplierCount
+          };
+        })
+      );
+
       res.json({
         success: true,
-        data: events
+        data: eventsWithSupplierCount
       });
     } catch (error) {
       console.error('Get events error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to fetch events'
+      });
+    }
+  }
+
+  // Update event
+  async updateEvent(req, res) {
+    try {
+      const { eventId } = req.params;
+      const updateData = req.body;
+
+      const event = await Event.findOneAndUpdate(
+        { _id: eventId, organizerId: req.user._id },
+        updateData,
+        { new: true }
+      );
+
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: 'Event not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Event updated successfully',
+        data: event
+      });
+    } catch (error) {
+      console.error('Update event error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update event'
+      });
+    }
+  }
+
+  // Delete event
+  async deleteEvent(req, res) {
+    try {
+      const { eventId } = req.params;
+
+      // Check if event has bookings
+      const bookingCount = await Booking.countDocuments({ eventId });
+      if (bookingCount > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot delete event with existing bookings'
+        });
+      }
+
+      const event = await Event.findOneAndDelete({
+        _id: eventId,
+        organizerId: req.user._id
+      });
+
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: 'Event not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Event deleted successfully'
+      });
+    } catch (error) {
+      console.error('Delete event error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to delete event'
       });
     }
   }

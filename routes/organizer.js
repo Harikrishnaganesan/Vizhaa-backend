@@ -13,6 +13,8 @@ router.get('/dashboard', organizerController.getDashboard);
 // Events
 router.post('/events', organizerController.createEvent);
 router.get('/events', organizerController.getEvents);
+router.put('/events/:eventId', organizerController.updateEvent);
+router.delete('/events/:eventId', organizerController.deleteEvent);
 router.get('/events/:eventId/suppliers', organizerController.getEventSuppliers);
 
 // Bookings (Status Management)

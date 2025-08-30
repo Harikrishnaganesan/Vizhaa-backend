@@ -40,18 +40,54 @@ class SupplierController {
     }
   }
 
-  // View all available events
+  // View all available events from all organizers
   async getAvailableEvents(req, res) {
     try {
-      const events = await Event.find({ 
-        status: { $in: ['Draft', 'Planning'] }
-      })
-      .populate('organizerId', 'fullName companyName phone')
-      .sort({ eventDate: 1 });
+      const supplierId = req.user._id;
+      
+      // Get all events from all organizers
+      const events = await Event.find({})
+        .populate('organizerId', 'fullName companyName phone email')
+        .sort({ createdAt: -1 });
+
+      // Check booking status for each event
+      const eventsWithBookingStatus = await Promise.all(
+        events.map(async (event) => {
+          const booking = await Booking.findOne({
+            eventId: event._id,
+            supplierId: supplierId
+          });
+
+          return {
+            id: event._id,
+            eventName: event.eventName,
+            eventType: event.eventType,
+            location: event.location,
+            eventDate: event.eventDate,
+            eventTime: event.eventTime,
+            budget: event.budget,
+            servicesNeeded: event.servicesNeeded,
+            numberOfGuests: event.numberOfGuests,
+            description: event.description,
+            organizer: {
+              id: event.organizerId._id,
+              fullName: event.organizerId.fullName,
+              companyName: event.organizerId.companyName,
+              phone: event.organizerId.phone,
+              email: event.organizerId.email
+            },
+            status: event.status,
+            createdAt: event.createdAt,
+            isBooked: !!booking,
+            bookingStatus: booking ? booking.status : null,
+            bookingId: booking ? booking._id : null
+          };
+        })
+      );
 
       res.json({
         success: true,
-        data: events
+        data: eventsWithBookingStatus
       });
     } catch (error) {
       console.error('Get available events error:', error);
